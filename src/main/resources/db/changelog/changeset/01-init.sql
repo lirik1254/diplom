@@ -228,7 +228,7 @@ create table engineers.course_module (
     foreign key (module_id) references engineers.module(id)
 );
 
-create table project_section_and_stamp (
+create table engineers.project_section_and_stamp (
     project_id bigint,
     section_and_stamp_id bigint,
     primary key(project_id, section_and_stamp_id),
@@ -236,7 +236,7 @@ create table project_section_and_stamp (
     foreign key (section_and_stamp_id) references engineers.section_and_stamp(id)
 );
 
-create table project_software_skill (
+create table engineers.project_software_skill (
     project_id bigint,
     software_skill_id bigint,
     primary key (project_id, software_skill_id),
@@ -244,7 +244,7 @@ create table project_software_skill (
     foreign key (software_skill_id) references engineers.software_skill(id)
 );
 
-create table project_user_like (
+create table engineers.project_user_like (
     project_id bigint,
     user_id bigint,
     primary key (project_id, user_id),

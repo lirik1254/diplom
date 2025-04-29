@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:17
+    container_name: engineering-db
+    environment:
+      POSTGRES_DB: engineeringDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./src/main/resources/db/changelog/changeset/01-init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+
+    # Healthcheck, чтобы Docker понимал, когда БД действительно готова к приёму соединений
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  app:
+    build:
+      context: .
+      dockerfile: src/Dockerfile
+    image: engineering-app:latest
+    container_name: engineering-app
+
+    # Ждём, пока db не станет healthy
+    depends_on:
+      db:
+        condition: service_healthy
+
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/engineeringDB
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_SECURITY_PASSWORD: ${SPRING_SECURITY_PASSWORD}
+      YANDEX_CLOUD_BUCKET: ${YANDEX_CLOUD_BUCKET}
+      YANDEX_CLOUD_KEY_ID: ${YANDEX_CLOUD_KEY_ID}
+      YANDEX_CLOUD_SECRET_KEY: ${YANDEX_CLOUD_SECRET_KEY}
+    ports:
+      - "8081:8080"
+
+volumes:
+  db-data:

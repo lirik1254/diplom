@@ -2,7 +2,7 @@ spring:
   application:
     name: diploma
   liquibase:
-    enabled: true
+    enabled: false
     change-log: classpath:/db/changelog/changelog-master.xml
     liquibase-schema: public
     default-schema: engineers
