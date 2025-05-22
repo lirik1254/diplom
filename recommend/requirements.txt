@@ -1,0 +1,9 @@
+SQLAlchemy>=1.4
+psycopg2-binary>=2.9
+numpy>=1.21
+scikit-learn>=1.0
+pydantic~=2.11.4
+fastapi~=0.115.12
+uvicorn[standard]~=0.34.2
+pytest~=8.3.5
+testcontainers~=4.10.0
