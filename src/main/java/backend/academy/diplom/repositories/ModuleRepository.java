@@ -16,37 +16,57 @@ public class ModuleRepository {
     private final ModuleRowMapper moduleRowMapper;
     private final NamedParameterJdbcTemplate template;
 
-    public List<Module> getModulesByCourseName(String courseName) {
+    public List<Module> getModulesByCourseId(Long courseId) {
         String sql = """
-                select m.id, m.number, m.name from engineers.module m
-                join engineers.course_module cm on m.id = cm.module_id
-                join engineers.course c on c.id = cm.course_id
-                where c.name = :courseName""";
+                select * from engineers.module
+                where course_id = :courseId""";
 
-        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("courseName",
-                courseName);
+        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("courseId", courseId);
 
-        return template.query(sql, sqlParameterSource, moduleRowMapper);
+        return template.query(sql ,sqlParameterSource, moduleRowMapper);
     }
 
-    public List<Module> getIsHereModuleByCourseNameAndUserId(String courseName, Long userId) {
+    public Module getModuleByModuleId(Long moduleId) {
         String sql = """
-                select m.id, m.number, m.name from engineers.module m
-                join engineers.course_module cm on m.id = cm.module_id
-                join engineers.course c on c.id = cm.course_id
-                join engineers.lesson l on l.module_id = m.id
-                join engineers.lesson_user lu on lu.lesson_id = l.id
-                where lu.user_id = :userId and lu.is_here = true
-                and c.name = :courseName""";
+                select * from engineers.module
+                where id = :moduleId""";
 
-        SqlParameterSource sqlParameterSource = new MapSqlParameterSource()
-                .addValue("courseName", courseName)
-                .addValue("userId", userId);
+        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("moduleId", moduleId);
 
-        try {
-            return template.query(sql, sqlParameterSource, moduleRowMapper);
-        } catch (Exception e) {
-            return null;
-        }
+        return template.query(sql, sqlParameterSource, moduleRowMapper).getFirst();
     }
+
+//    public List<Module> getModulesByCourseName(String courseName) {
+//        String sql = """
+//                select m.id, m.number, m.name from engineers.module m
+//                join engineers.course_module cm on m.id = cm.module_id
+//                join engineers.course c on c.id = cm.course_id
+//                where c.name = :courseName""";
+//
+//        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("courseName",
+//                courseName);
+//
+//        return template.query(sql, sqlParameterSource, moduleRowMapper);
+//    }
+//
+//    public List<Module> getIsHereModuleByCourseNameAndUserId(String courseName, Long userId) {
+//        String sql = """
+//                select m.id, m.number, m.name from engineers.module m
+//                join engineers.course_module cm on m.id = cm.module_id
+//                join engineers.course c on c.id = cm.course_id
+//                join engineers.lesson l on l.module_id = m.id
+//                join engineers.lesson_user lu on lu.lesson_id = l.id
+//                where lu.user_id = :userId and lu.is_here = true
+//                and c.name = :courseName""";
+//
+//        SqlParameterSource sqlParameterSource = new MapSqlParameterSource()
+//                .addValue("courseName", courseName)
+//                .addValue("userId", userId);
+//
+//        try {
+//            return template.query(sql, sqlParameterSource, moduleRowMapper);
+//        } catch (Exception e) {
+//            return null;
+//        }
+//    }
 }

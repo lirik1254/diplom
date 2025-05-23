@@ -1,13 +1,12 @@
 package backend.academy.diplom.controllers;
 
+import backend.academy.diplom.DTO.ProjectDTO;
 import backend.academy.diplom.DTO.search.ProjectsDTO;
 import backend.academy.diplom.DTO.search.SpecialistsDTO;
+import backend.academy.diplom.entities.Company;
 import backend.academy.diplom.services.SearchService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -25,10 +24,16 @@ public class SearchController {
     }
 
     @GetMapping("/projects")
-    public List<ProjectsDTO> getProjects(@RequestParam(required = false) String name,
-                                         @RequestParam(required = false) List<String> sectionAndStamp,
-                                         @RequestParam(required = false) List<String> softwareSkill) {
-        return searchService.getProjects(name, sectionAndStamp, softwareSkill);
+    public List<ProjectDTO> getProjects(@RequestParam(required = false) String name,
+                                        @RequestParam(required = false) List<String> sectionAndStamp,
+                                        @RequestParam(required = false) List<String> softwareSkill,
+                                        @RequestHeader("Authorization") String authHeader) {
+        return searchService.getProjects(name, sectionAndStamp, softwareSkill, authHeader);
+    }
+
+    @GetMapping("/companies")
+    public List<Company> getCompanies(@RequestParam(required = false) String name) {
+        return searchService.getCompanies(name);
     }
 
 }

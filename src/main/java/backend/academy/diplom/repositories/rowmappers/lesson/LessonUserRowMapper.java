@@ -1,6 +1,6 @@
 package backend.academy.diplom.repositories.rowmappers.lesson;
 
-import backend.academy.diplom.entities.LessonUser;
+import backend.academy.diplom.entities.lesson.LessonUser;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 

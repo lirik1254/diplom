@@ -1,7 +1,7 @@
 package backend.academy.diplom.controllers;
 
 
-import backend.academy.diplom.DTO.profile.ProfileData;
+import backend.academy.diplom.DTO.profile.*;
 import backend.academy.diplom.services.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,21 +14,32 @@ import java.util.Map;
 @RequestMapping("/api/profile")
 @RequiredArgsConstructor
 public class ProfileController {
-
     private final ProfileService profileService;
 
-    @PostMapping(value = "/upload", consumes = "multipart/form-data")
-    public ResponseEntity<String> updateProfile(
-            @RequestHeader("Authorization") String authHeader,
-            @RequestParam Map<String, String> fields
-    ) throws IOException {
-        profileService.upload(authHeader, fields);
-
-        return ResponseEntity.ok("Профиль обновлен");
+    @GetMapping("/profile-preview")
+    public ProfilePreviewDTO getProfilePreview(@RequestHeader("Authorization") String authHeader) {
+        return profileService.getProfilePreview(authHeader);
     }
 
-    @GetMapping(value = "/get")
-    public ProfileData getProfile(@RequestHeader("Authorization") String authHeader) throws IOException {
-        return profileService.getProfile(authHeader);
+    @GetMapping("/profile-info")
+    public ProfileInfoDTO getProfileInfo(@RequestHeader("Authorization") String authHeader) {
+        return profileService.getProfileInfo(authHeader);
+    }
+
+    @PostMapping("/upload-profile")
+    public void uploadProfile(@RequestHeader("Authorization") String authHeader,
+                              @RequestBody UploadProfileDTO uploadProfileDTO) {
+        profileService.updateProfile(authHeader, uploadProfileDTO);
+    }
+
+    @GetMapping("/profile-setting-info")
+    public ProfileSettingInfoDTO getProfileSettingInfo(@RequestHeader("Authorization") String authHeader) {
+        return profileService.getProfileSettingInfo(authHeader);
+    }
+
+    @PostMapping("/upload-profile-setting")
+    public void uploadProfileSetting(@RequestBody ProfileSettingInfoDTO profileSettingInfoDTO,
+                                     @RequestHeader("Authorization") String authHeader) {
+        profileService.uploadProfileSetting(profileSettingInfoDTO, authHeader);
     }
 }

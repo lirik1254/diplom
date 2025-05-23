@@ -1,5 +1,6 @@
-package backend.academy.diplom;
+package backend.academy.diplom.configuration;
 
+import backend.academy.diplom.AuthTokenFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,9 +32,9 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/register", "api/sign-in", "api/refresh",
-                                "/api/request-reset", "api/reset-password",
-                                "api/put-link", "api/get-video").permitAll()
+                        .requestMatchers("api/register", "api/sign-in", "api/refresh",
+                                "api/request-reset", "api/reset-password",
+                                "api/put-link", "api/get-video", "api/redirect").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Без сессий

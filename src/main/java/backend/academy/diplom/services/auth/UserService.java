@@ -6,7 +6,7 @@ import backend.academy.diplom.DTO.auth.RefreshResponse;
 import backend.academy.diplom.DTO.auth.ResetPasswordDTO;
 import backend.academy.diplom.entities.PasswordResetToken;
 import backend.academy.diplom.entities.RefreshToken;
-import backend.academy.diplom.entities.User;
+import backend.academy.diplom.entities.user.User;
 import backend.academy.diplom.exceptions.InvalidPasswordException;
 import backend.academy.diplom.exceptions.InvalidPasswordResetToken;
 import backend.academy.diplom.exceptions.RefreshTokenExpireException;
@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 
 @Service
@@ -52,14 +53,16 @@ public class UserService {
     private int jwtExpirationMs;
 
     @Transactional
-    public void saveUser(User user) {
+    public void saveUser(User user) throws InterruptedException {
         String generatedPassword = passwordUtils.generateRandomPassword(8);
         String encodedPassword = passwordEncoder.encode(generatedPassword);
 
         user.setPassword(encodedPassword);
         userRepository.createUser(user);
 
-        emailService.sendPasswordEmail(user.getEmail(), generatedPassword, user.getPhoneNumber());
+        CompletableFuture.runAsync(() -> emailService.sendPasswordEmail(user.getEmail(),
+                generatedPassword, user.getPhoneNumber()));
+        Thread.sleep(2000);
     }
 
     @Transactional
@@ -83,15 +86,15 @@ public class UserService {
         }
     }
 
-    @Transactional
-    public void logout(HttpServletRequest httpServletRequest) {
-        String jwt = authTokenFilter.parseJwt(httpServletRequest);
-        String email = createAccessToken.getEmailFromJwtToken(jwt);
-        userRepository.deleteTokenByUserMail(email);
-    }
+//    @Transactional
+//    public void logout(HttpServletRequest httpServletRequest) {
+//        String jwt = authTokenFilter.parseJwt(httpServletRequest);
+//        String email = createAccessToken.getEmailFromJwtToken(jwt);
+//        userRepository.deleteTokenByUserMail(email);
+//    }
 
     @Transactional
-    public void requestReset(String email) {
+    public void requestReset(String email) throws InterruptedException {
         List<User> userByEmail = userRepository.findByEmail(email);
         if (userByEmail.isEmpty()) {
             throw new UserNotFoundException("");
@@ -108,7 +111,9 @@ public class UserService {
         passwordResetTokenRepository.saveToken(passwordResetToken);
 
 
-        emailService.sendResetPasswordToken(user.getEmail(), passwordResetToken.getToken());
+        CompletableFuture.runAsync(() ->
+                emailService.sendResetPasswordToken(user.getEmail(), passwordResetToken.getToken()));
+        Thread.sleep(2500);
     }
 
     @Transactional

@@ -1,5 +1,7 @@
 package backend.academy.diplom;
 
+import backend.academy.diplom.DTO.auth.LoginRequest;
+import backend.academy.diplom.utils.PasswordUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import liquibase.Scope;
 import liquibase.command.CommandScope;
@@ -11,11 +13,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -25,6 +31,10 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
+
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 @Testcontainers
 @AutoConfigureMockMvc
@@ -36,6 +46,9 @@ public abstract class TestBase {
 
     @Autowired
     protected MockMvc mockMvc;
+
+    @MockitoSpyBean
+    protected PasswordUtils passwordUtils;
 
     @Autowired
     protected ObjectMapper objectMapper;
@@ -101,5 +114,30 @@ public abstract class TestBase {
         } catch (Exception e) {
             throw new RuntimeException("Database cleanup failed", e);
         }
+    }
+
+    protected String getDefaultRegWithAccess() throws Exception {
+        String registerContent = """
+        {
+            "email": "test@mail.ru"
+        }
+    """;
+        when(passwordUtils.generateRandomPassword(anyInt())).thenReturn("testtest");
+        mockMvc.perform(post("/api/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registerContent));
+
+        LoginRequest loginReq = new LoginRequest("test@mail.ru", "testtest");
+        MvcResult loginResult = mockMvc.perform(post("/api/sign-in")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginReq)))
+                .andReturn();
+
+        String loginJson = loginResult.getResponse().getContentAsString();
+
+        return objectMapper
+                .readTree(loginJson)
+                .get("accessToken")
+                .asText();
     }
 }

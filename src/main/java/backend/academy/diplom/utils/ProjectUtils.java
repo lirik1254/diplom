@@ -1,8 +1,9 @@
 package backend.academy.diplom.utils;
 
+import backend.academy.diplom.DTO.ProjectDTO;
 import backend.academy.diplom.DTO.search.ProjectsDTO;
 import backend.academy.diplom.entities.Project;
-import backend.academy.diplom.entities.User;
+import backend.academy.diplom.entities.user.User;
 import backend.academy.diplom.repositories.auth.UserRepository;
 import backend.academy.diplom.repositories.profile.SectionAndStampRepository;
 import backend.academy.diplom.repositories.profile.SoftwareSkillRepository;
@@ -46,5 +47,19 @@ public class ProjectUtils {
         });
 
         return projectsDTOS;
+    }
+
+    public List<ProjectDTO> toProjectDTO(List<ProjectsDTO> projectsDTOS) {
+        return projectsDTOS.stream()
+                .map(projectsDTO -> {
+                    projectsDTO.sectionAndStamps().addAll(projectsDTO.softwareSkills());
+                    return new ProjectDTO(projectsDTO.id(),
+                            projectsDTO.photoUrl(),
+                            projectsDTO.sectionAndStamps(),
+                            projectsDTO.name(),
+                            projectsDTO.authorId(),
+                            projectsDTO.fullName(),
+                            projectsDTO.likeCount());
+                }).toList();
     }
 }

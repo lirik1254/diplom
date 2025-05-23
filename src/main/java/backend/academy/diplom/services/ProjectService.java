@@ -3,12 +3,13 @@ package backend.academy.diplom.services;
 import backend.academy.diplom.DTO.ProjectDTO;
 import backend.academy.diplom.DTO.RetLikesDTO;
 import backend.academy.diplom.entities.Project;
-import backend.academy.diplom.entities.User;
+import backend.academy.diplom.entities.user.User;
 import backend.academy.diplom.repositories.ProjectRepository;
 import backend.academy.diplom.repositories.auth.UserRepository;
 import backend.academy.diplom.repositories.profile.SectionAndStampRepository;
 import backend.academy.diplom.repositories.profile.SoftwareSkillRepository;
 import backend.academy.diplom.utils.JwtUtils;
+import backend.academy.diplom.utils.ProjectUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ public class ProjectService {
     private final FileService fileService;
     private final SectionAndStampRepository sectionAndStampRepository;
     private final SoftwareSkillRepository softwareSkillRepository;
+    private final ProjectUtils projectUtils;
 
     @Transactional
     public void updateLike(String authHeader, Long projectId) {
@@ -87,5 +89,11 @@ public class ProjectService {
 
     public Integer getProjectLikeCount(Long projectId) {
         return projectRepository.getProjectLikeCount(projectId);
+    }
+
+    public List<ProjectDTO> getAuthorProjects(String authHeader) {
+        User user = jwtUtils.getUserByAuthHeader(authHeader);
+        List<Project> projects = projectRepository.getProjectsByAuthorId(user.getId());
+        return projectUtils.toProjectDTO(projectUtils.projectsToDTO(projects));
     }
 }

@@ -1,7 +1,8 @@
 package backend.academy.diplom.services;
 
-import backend.academy.diplom.S3Config;
-import backend.academy.diplom.entities.User;
+import backend.academy.diplom.DTO.PutLinkDTO;
+import backend.academy.diplom.configuration.S3Config;
+import backend.academy.diplom.entities.user.User;
 import backend.academy.diplom.repositories.auth.UserRepository;
 import backend.academy.diplom.utils.CreateAccessToken;
 import jakarta.transaction.Transactional;
@@ -16,6 +17,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +28,7 @@ public class FileService {
     private final CreateAccessToken createAccessToken;
     private final UserRepository userRepository;
 
-    public String putLink(String filePath) {
+    public PutLinkDTO putLink(String filePath) {
         PutObjectRequest putObjectRequest = PutObjectRequest
                 .builder()
                 .bucket(s3Config.getYandexCloudBucket())
@@ -42,7 +44,8 @@ public class FileService {
         PresignedPutObjectRequest presignedPutObjectRequest =
                 presigner.presignPutObject(putObjectPresignRequest);
 
-        return presignedPutObjectRequest.url().toString();
+
+        return new PutLinkDTO(presignedPutObjectRequest.url().toString());
     }
 
     public String getLink(String authHeader, String type) {
@@ -88,6 +91,13 @@ public class FileService {
         PresignedGetObjectRequest presignedGetObjectRequest = presigner.presignGetObject(presignRequest);
 
         return presignedGetObjectRequest.url().toString();
+    }
+
+    public String getPresignedLinkIfExist(String key) {
+        if (key != null && !Objects.equals("", key)) {
+            return getPresignedLink(key);
+        }
+        return key;
     }
 
     @Transactional

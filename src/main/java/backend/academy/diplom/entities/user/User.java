@@ -1,4 +1,4 @@
-package backend.academy.diplom.entities;
+package backend.academy.diplom.entities.user;
 
 import lombok.Data;
 
@@ -14,10 +14,13 @@ public class User {
     private String password;
     private Date birthDate;
     private String city;
-    private String education;
     private String status;
     private String resumePath;
     private String diplomaPath;
     private String photoPath;
     private String gender;
+    private String about;
+    private String telegram;
+    private Boolean hideBirthday;
+    private Boolean isPublic;
 }

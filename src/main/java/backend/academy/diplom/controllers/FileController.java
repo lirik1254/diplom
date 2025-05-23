@@ -1,5 +1,6 @@
 package backend.academy.diplom.controllers;
 
+import backend.academy.diplom.DTO.PutLinkDTO;
 import backend.academy.diplom.services.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +13,7 @@ public class FileController {
     private final FileService fileService;
 
     @GetMapping("/put-link")
-    public String putLink(@RequestParam String filePath) {
+    public PutLinkDTO putLink(@RequestParam String filePath) {
         return fileService.putLink(filePath);
     }
 

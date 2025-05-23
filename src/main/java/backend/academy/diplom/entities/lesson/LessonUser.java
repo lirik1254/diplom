@@ -1,4 +1,4 @@
-package backend.academy.diplom.entities;
+package backend.academy.diplom.entities.lesson;
 
 import lombok.Data;
 

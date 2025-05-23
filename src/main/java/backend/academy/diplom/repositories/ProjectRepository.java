@@ -1,5 +1,6 @@
 package backend.academy.diplom.repositories;
 
+import backend.academy.diplom.DTO.ProjectDTO;
 import backend.academy.diplom.entities.Project;
 import backend.academy.diplom.repositories.rowmappers.ProjectRowMapper;
 import lombok.RequiredArgsConstructor;
@@ -136,5 +137,15 @@ public class ProjectRepository {
         SqlParameterSource sqlParameterSource = new MapSqlParameterSource("projectId", projectId);
 
         return template.queryForObject(sql, sqlParameterSource, Integer.class);
+    }
+
+    public List<Project> getProjectsByAuthorId(Long authorId) {
+        String sql = """
+                select * from engineers.project
+                where author_id = :authorId""";
+
+        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("authorId", authorId);
+
+        return template.query(sql, sqlParameterSource, projectRowMapper);
     }
 }

@@ -3,7 +3,7 @@ package backend.academy.diplom.services.auth;
 import backend.academy.diplom.DTO.auth.RefreshRequest;
 import backend.academy.diplom.DTO.auth.RefreshResponse;
 import backend.academy.diplom.entities.RefreshToken;
-import backend.academy.diplom.entities.User;
+import backend.academy.diplom.entities.user.User;
 import backend.academy.diplom.exceptions.RefreshTokenExpireException;
 import backend.academy.diplom.exceptions.RefreshTokenInvalidException;
 import backend.academy.diplom.repositories.auth.RefreshTokenRepository;
@@ -13,7 +13,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;

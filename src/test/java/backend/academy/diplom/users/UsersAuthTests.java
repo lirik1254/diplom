@@ -4,20 +4,18 @@ import backend.academy.diplom.DTO.auth.LoginRequest;
 import backend.academy.diplom.DTO.auth.MailDTO;
 import backend.academy.diplom.DTO.auth.RefreshRequest;
 import backend.academy.diplom.TestBase;
-import backend.academy.diplom.entities.RefreshToken;
-import backend.academy.diplom.entities.User;
-import backend.academy.diplom.exceptions.UserNotFoundException;
+import backend.academy.diplom.entities.user.User;
 import backend.academy.diplom.repositories.auth.RefreshTokenRepository;
 import backend.academy.diplom.repositories.auth.UserRepository;
 import backend.academy.diplom.services.auth.EmailService;
 import backend.academy.diplom.utils.PasswordUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.ServletException;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -25,8 +23,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.sql.Timestamp;
-import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertTrue;
@@ -48,9 +44,6 @@ public class UsersAuthTests extends TestBase {
 
     @MockitoBean
     EmailService emailService;
-
-    @MockitoSpyBean
-    PasswordUtils passwordUtils;
 
     @Autowired
     UserRepository userRepository;

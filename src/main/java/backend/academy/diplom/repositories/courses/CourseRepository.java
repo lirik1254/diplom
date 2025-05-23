@@ -20,74 +20,27 @@ public class CourseRepository {
     private final CourseModuleNameRowMapper courseModuleNameRowMapper;
     private final IdRowMapper idRowMapper;
 
-    public List<Course> getAllCoursesByEmail(String email) {
-        String getCourseQuery = """
-                select * from engineers.course c
-                join engineers.user_course uc on c.id = uc.course_id
-                join engineers.user u on u.id = uc.user_id
-                where email = :email""";
-
-        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("email", email);
-
-        return template.query(getCourseQuery, sqlParameterSource, courseRowMapper);
-    }
-
-    public String getCourseModuleName(Long lessonId) {
+    public List<Course> getAlLCoursesByUserId(Long userId) {
         String sql = """
-                select 'Урок '  || m.number::text || '.' || l.number::text as name from engineers.module m
-                join engineers.lesson l on m.id = l.module_id
-                where l.id = :lessonId""";
+                select * from engineers.course
+                where id in (select course_id from engineers.user_course where user_id = :userId)""";
 
-        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("lessonId", lessonId);
+        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("userId", userId);
 
-        return template.query(sql, sqlParameterSource, courseModuleNameRowMapper).getFirst();
+        return template.query(sql, sqlParameterSource, courseRowMapper);
     }
 
-    public Long getBeforeLesson(Long lessonId) {
-        String sql = """
-                SELECT l.id
-                FROM engineers.lesson l
-                JOIN engineers.module m ON l.module_id = m.id
-                JOIN engineers.course_module mc ON m.id = mc.module_id
-                WHERE mc.course_id = (
-                    SELECT mc.course_id
-                    FROM engineers.lesson l
-                    JOIN engineers.module m ON l.module_id = m.id
-                    JOIN engineers.course_module mc ON m.id = mc.module_id
-                    WHERE l.id = :lessonId
-                )
-                AND l.id < :lessonId
-                ORDER BY l.id DESC
-                LIMIT 1""";
-
-        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("lessonId", lessonId);
-
-        List<Long> result = template.query(sql, sqlParameterSource, idRowMapper);
-        return result.isEmpty() ? null : result.getFirst();
-    }
-
-    public Long getAfterLesson(Long lessonId) {
-        String sql = """
-                SELECT l.id
-                FROM engineers.lesson l
-                JOIN engineers.module m ON l.module_id = m.id
-                JOIN engineers.course_module mc ON m.id = mc.module_id
-                WHERE mc.course_id = (
-                    SELECT mc.course_id
-                    FROM engineers.lesson l
-                    JOIN engineers.module m ON l.module_id = m.id
-                    JOIN engineers.course_module mc ON m.id = mc.module_id
-                    WHERE l.id = :lessonId
-                )
-                AND l.id > :lessonId
-                ORDER BY l.id ASC
-                LIMIT 1;""";
-
-        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("lessonId", lessonId);
-
-        List<Long> result = template.query(sql, sqlParameterSource, idRowMapper);
-        return result.isEmpty() ? null : result.getFirst();
-    }
+//    public List<Course> getAllCoursesByEmail(String email) {
+//        String getCourseQuery = """
+//                select * from engineers.course c
+//                join engineers.user_course uc on c.id = uc.course_id
+//                join engineers.user u on u.id = uc.user_id
+//                where email = :email""";
+//
+//        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("email", email);
+//
+//        return template.query(getCourseQuery, sqlParameterSource, courseRowMapper);
+//    }
 
     public List<Course> getMainPreview() {
         String sql = """
@@ -110,6 +63,19 @@ public class CourseRepository {
                 select * from engineers.course
                 where id = :courseId""";
         SqlParameterSource sqlParameterSource = new MapSqlParameterSource("courseId", courseId);
+        return template.query(sql, sqlParameterSource, courseRowMapper).getFirst();
+    }
+
+    public Course getCourseByLessonId(Long lessonId) {
+        String sql = """
+                select * from engineers.course where id = (
+                select c.id from engineers.lesson l
+                join engineers.module m on l.module_id = m.id
+                join engineers.course c on m.course_id = c.id
+                where l.id = :lessonId)""";
+
+        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("lessonId", lessonId);
+
         return template.query(sql, sqlParameterSource, courseRowMapper).getFirst();
     }
 }

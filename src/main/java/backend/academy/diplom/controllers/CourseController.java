@@ -1,10 +1,6 @@
 package backend.academy.diplom.controllers;
 
-import backend.academy.diplom.DTO.course.CourseDetail;
-import backend.academy.diplom.DTO.course.CoursePreviewDTO;
-import backend.academy.diplom.DTO.course.LastSeenProgramDTO;
-import backend.academy.diplom.DTO.course.ProgramDTO;
-import backend.academy.diplom.entities.Course;
+import backend.academy.diplom.DTO.course.*;
 import backend.academy.diplom.services.CourseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -28,39 +24,38 @@ public class CourseController {
     }
 
     @GetMapping("/course-detail/{courseId}")
-    public CourseDetail getCourseDetail(@PathVariable Long courseId) {
+    public CourseDetailDTO getCourseDetail(@PathVariable Long courseId) {
         return courseService.getCourseDetail(courseId);
     }
 
     @GetMapping("/owned")
-    public List<Course> getOwnedCourse(@RequestHeader("Authorization") String authHeader) {
+    public List<OwnedCourseDTO> getOwnedCourse(@RequestHeader("Authorization") String authHeader) {
         return courseService.getCoursesOwned(authHeader);
     }
 
-    @GetMapping("/course-program")
-    public ProgramDTO getCourseProgram(@RequestHeader("Authorization") String authHeader,
-                                       @RequestParam String courseName) {
-        return courseService.getCourseProgram(courseName, authHeader);
+    @GetMapping("/course-program/{courseId}")
+    public List<CourseProgramDTO> getCourseProgram(@PathVariable Long courseId) {
+        return courseService.getCourseProgram(courseId);
     }
 
-    @GetMapping("/last-seen-module")
-    public LastSeenProgramDTO getLastSeenModule(@RequestHeader("Authorization") String authHeader,
-                                                @RequestParam String courseName) {
-        return courseService.getLastSeenModule(courseName, authHeader);
+    @GetMapping("/last-seen/{courseId}")
+    public CourseProgramDTO getLastSeenProgram(@PathVariable Long courseId,
+                                                     @RequestHeader("Authorization") String authHeader) {
+        return courseService.getLastSeenProgram(courseId, authHeader);
     }
 
-    @GetMapping("/lesson-number")
-    public String getLessonNumber(@RequestParam Long lessonId) {
-        return courseService.getCourseModuleName(lessonId);
-    }
+//    @GetMapping("/course-program")
+//    public ProgramDTO getCourseProgram(@RequestHeader("Authorization") String authHeader,
+//                                       @RequestParam String courseName) {
+//        return courseService.getCourseProgram(courseName, authHeader);
+//    }
+//
+//    @GetMapping("/last-seen-module")
+//    public LastSeenProgramDTO getLastSeenModule(@RequestHeader("Authorization") String authHeader,
+//                                                @RequestParam String courseName) {
+//        return courseService.getLastSeenModule(courseName, authHeader);
+//    }
 
-    @GetMapping("/before-lesson")
-    public Long getBeforeLesson(@RequestParam Long lessonId) {
-        return courseService.getBeforeLesson(lessonId);
-    }
 
-    @GetMapping("/after-lesson")
-    public Long getAfterLesson(@RequestParam Long lessonId) {
-        return courseService.getAfterLesson(lessonId);
-    }
+
 }

@@ -20,4 +20,5 @@ public class Course {
     private String whoWhom;
     private String whatMaster;
     private String priceFull;
+    private String showDateBoughtCourse;
 }

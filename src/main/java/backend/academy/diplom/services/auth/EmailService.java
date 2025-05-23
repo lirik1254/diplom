@@ -44,7 +44,7 @@ public class EmailService {
             helper.setSubject("Ссылка для сброса пароля");
             helper.setFrom(mailFrom);
 
-            String resetLink = "https://www.protimrf.com/reset-password?token=" + token+"&"+"mail="+email;
+            String resetLink = "http://45.11.27.174:8081/api/redirect?token=" + token+"&"+"mail="+email;
 
             String content = "<p>Здравствуйте,</p>" +
                     "<p>Для сброса пароля, пожалуйста, перейдите по следующей ссылке:</p>" +

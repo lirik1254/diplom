@@ -26,8 +26,8 @@ public class FavouritesController {
         return favouritesService.checkFavourites(authHeader, projectId);
     }
 
-    @GetMapping
-    public List<ProjectsDTO> getFavourites(@RequestHeader("Authorization") String authHeader) {
-        return favouritesService.getFavourites(authHeader);
-    }
+//    @GetMapping
+//    public List<ProjectsDTO> getFavourites(@RequestHeader("Authorization") String authHeader) {
+//        return favouritesService.getFavourites(authHeader);
+//    }
 }

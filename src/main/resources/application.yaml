@@ -51,3 +51,5 @@ yandex-cloud-secret-key: ${YANDEX_CLOUD_SECRET_KEY}
 yandex-cloud-region: ru-central1
 yandex-cloud-s3-endpoint: https://storage.yandexcloud.net
 yandex-cloud-bucket: ${YANDEX_CLOUD_BUCKET}
+
+recommendation-url: http://recommend:8082

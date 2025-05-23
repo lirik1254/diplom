@@ -2,6 +2,7 @@ package backend.academy.diplom.controllers;
 
 import backend.academy.diplom.DTO.ProjectDTO;
 import backend.academy.diplom.DTO.RetLikesDTO;
+import backend.academy.diplom.entities.Project;
 import backend.academy.diplom.services.NotificationService;
 import backend.academy.diplom.services.ProjectService;
 import lombok.RequiredArgsConstructor;
@@ -45,4 +46,8 @@ public class ProjectController {
         return projectService.getProjectLikeCount(projectId);
     }
 
+    @GetMapping("/author-projects")
+    public List<ProjectDTO> getAuthorProjects(@RequestHeader("Authorization") String authHeader) {
+        return projectService.getAuthorProjects(authHeader);
+    }
 }

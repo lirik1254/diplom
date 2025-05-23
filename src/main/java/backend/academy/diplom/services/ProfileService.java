@@ -1,17 +1,19 @@
 package backend.academy.diplom.services;
 
-import backend.academy.diplom.DTO.profile.ProfileData;
-import backend.academy.diplom.entities.User;
+import backend.academy.diplom.DTO.profile.*;
+import backend.academy.diplom.entities.user.User;
 import backend.academy.diplom.repositories.auth.UserRepository;
 import backend.academy.diplom.repositories.profile.*;
-import backend.academy.diplom.utils.CreateAccessToken;
+import backend.academy.diplom.utils.JwtUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.time.Period;
+import java.time.ZoneId;
 import java.util.*;
 
 @Service
@@ -21,163 +23,116 @@ public class ProfileService {
     private final UserRepository userRepository;
     private final UserSectionAndStampRepository userSectionAndStampRepository;
     private final UserSocialNetworkRepository userSocialNetworkRepository;
+    private final UserEducationRepository userEducationRepository;
     private final UserSoftwareSkillRepository userSoftwareSkillRepository;
-    private final SocialNetworkRepository socialNetworkRepository;
     private final SectionAndStampRepository sectionAndStampRepository;
     private final SoftwareSkillRepository softwareSkillRepository;
-    private final S3Service s3Service;
-    private final CreateAccessToken createAccessToken;
 
+    private final JwtUtils jwtUtils;
+    private final FileService fileService;
 
-    private static final String FIRST_NAME_KEY = "firstName";
-    private static final String LAST_NAME_KEY = "lastName";
-    private static final String CITY = "city";
-    private static final String GENDER = "gender";
-    private static final String SECTION = "section";
-    private static final String SKILL = "skill";
-    private static final String SOCIAL = "social";
-    private static final String BIRTH_DATE = "birth_date";
-    private static final String DELETED_RESUME = "deletedResume";
-    private static final String DELETED_DIPLOMA = "deletedDiploma";
-    private static final String DELETED_PHOTO = "deletedPhoto";
-    private static final String RESUME_PATH = "resume";
-    private static final String DIPLOMA_PATH = "diploma";
-    private static final String PHOTO_PATH = "photo";
+    public ProfilePreviewDTO getProfilePreview(String authHeader) {
+        User user = jwtUtils.getUserByAuthHeader(authHeader);
+        String fullName = user.getName() + " " + user.getSurname();
+        Date birthDate = user.getBirthDate();
+        Integer age = null;
+        if (birthDate != null) {
+            age = getAge(user.getBirthDate());
+        }
+        String photoPath = user.getPhotoPath();
+        if (photoPath != null) {
+            photoPath = fileService.getPresignedLink(user.getPhotoPath());
+        }
 
-    private String lastName;
-    private String firstName;
-    private String city;
-    private String gender;
-    private String section;
-    private String skill;
-    private String social;
-    private LocalDate birthDate;
-    private String token;
-    private String email;
-    private User user;
-    private Long userId;
-    private Boolean deletedResume;
-    private Boolean deletedDiploma;
-    private Boolean deletedPhoto;
-
-    private String resumePath = null;
-    private String diplomaPath = null;
-    private String photoPath = null;
-
-    @Transactional
-    public void upload(String authHeader, Map<String, String> fields) throws IOException {
-
-        init(fields, authHeader);
-
-        // Сначала обновление дефолтных полей у user
-        userRepository.updateStringFields(email, lastName, firstName, city, gender, birthDate);
-
-        // После добавление в коллекции, связанные с user
-        processCollections();
-
-        deleteFiles(authHeader);
+        return new ProfilePreviewDTO(fullName, age, user.getCity(), user.getStatus(), photoPath);
     }
 
+    private Integer getAge(Date birthDate) {
+        LocalDate birthLocal = Instant.ofEpochMilli(birthDate.getTime())
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
 
-    private String setField(Map<String, String> fields, String key) {
-        if (fields.containsKey(key)) {
-            return fields.get(key);
-        }
-        return null;
+        LocalDate today = LocalDate.now();
+
+        return Period.between(birthLocal, today).getYears();
     }
 
-    private void init(Map<String, String> fields, String authHeader) {
-        lastName = setField(fields, LAST_NAME_KEY);
-        firstName = setField(fields, FIRST_NAME_KEY);
-        city = setField(fields, CITY);
-        gender = setField(fields, GENDER);
-        section = setField(fields, SECTION);
-        skill = setField(fields, SKILL);
-        social = setField(fields, SOCIAL);
-        resumePath = setField(fields, RESUME_PATH);
-        photoPath = setField(fields, photoPath);
-        diplomaPath = setField(fields, diplomaPath);
-
-        if (fields.containsKey(BIRTH_DATE)) {
-            String birth = fields.get(BIRTH_DATE);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-            birthDate = LocalDate.parse(birth, formatter);
-        }
-
-        token = authHeader.substring(7);
-        email = createAccessToken.getEmailFromJwtToken(token);
-
-        user = userRepository.findByEmail(email).getFirst();
-        userId = user.getId();
-
-        deletedResume = Boolean.valueOf(fields.get(DELETED_RESUME));
-        deletedDiploma = Boolean.valueOf(fields.get(DELETED_DIPLOMA));
-        deletedPhoto = Boolean.valueOf(fields.get(DELETED_PHOTO));
-    }
-
-    private void processCollections() {
-        if (section != null) {
-            Set<String> sections = new HashSet<>(List.of(section.split(" ")));
-            userSectionAndStampRepository.deleteByUserId(userId);
-            sections.forEach(stringSection -> userSectionAndStampRepository.addUserSection(userId,
-                    section));
-        }
-        if (skill != null) {
-            Set<String> skills = new HashSet<>(List.of(skill.split(" ")));
-            userSoftwareSkillRepository.deleteByUserId(userId);
-            skills.forEach(skillString -> userSoftwareSkillRepository.addSoftwareSkill(userId,
-                    skillString));
-        }
-
-        if (social != null) {
-            Set<String> socials = new HashSet<>(List.of(social.split(" ")));
-            userSocialNetworkRepository.deleteByUserId(userId);
-            socials.forEach(socialString -> userSocialNetworkRepository.addSocialNetwork(userId,
-                    socialString));
-        }
-    }
-
-    private void deleteFiles(String authHeader) {
-        if (deletedResume) {
-            s3Service.deleteFile(authHeader, "resume");
-        }
-
-        if (deletedDiploma) {
-            s3Service.deleteFile(authHeader, "diploma");
-        }
-
-        if (deletedPhoto) {
-            s3Service.deleteFile(authHeader, "photo");
-        }
-    }
-
-    public ProfileData getProfile(String authHeader) throws IOException {
-        token = authHeader.substring(7);
-        email = createAccessToken.getEmailFromJwtToken(token);
-
-        User user = userRepository.findByEmail(email).getFirst();
+    public ProfileInfoDTO getProfileInfo(String authHeader) {
+        User user = jwtUtils.getUserByAuthHeader(authHeader);
         Long userId = user.getId();
 
-        Map<String, String> returnData = new HashMap<>();
-        returnData.put(FIRST_NAME_KEY, user.getName());
-        returnData.put(LAST_NAME_KEY, user.getSurname());
-        returnData.put(CITY, user.getCity());
-        returnData.put(GENDER, user.getGender());
-        returnData.put(BIRTH_DATE,
-                user.getBirthDate() == null ? null : user.getBirthDate().toString());
+        List<String> sectionAndStamp = sectionAndStampRepository.getSectionAndStampByUserid(userId);
+        List<String> softwareSkills = softwareSkillRepository.getSoftwareSkillByUserId(userId);
 
-        String socialNetworks = String.join(" ",
-                socialNetworkRepository.getSocialNetworksByUserId(userId));
-        String sectionAndStamps = String.join(" ",
-                sectionAndStampRepository.getSectionAndStampByUserid(userId));
-        String softwareSkills = String.join(" ",
-                softwareSkillRepository.getSoftwareSkillByUserId(userId));
+        String diplomaPath = user.getDiplomaPath();
+        String diplomaName = diplomaPath;
+        if (diplomaPath != null && !Objects.equals(diplomaPath, "")) {
+            diplomaPath = fileService.getPresignedLink(diplomaPath);
+        }
 
-        returnData.put(SECTION, sectionAndStamps);
-        returnData.put(SKILL, softwareSkills);
-        returnData.put(SOCIAL, socialNetworks);
+        String resumePath = user.getResumePath();
+        String resumeName = resumePath;
+        if (resumePath != null && !Objects.equals(resumePath, "")) {
+            resumePath = fileService.getPresignedLink(resumePath);
+        }
 
-        return new ProfileData(returnData);
+        List<String> userEducation = userEducationRepository.getEducationByUserId(userId);
+        List<String> userSocialNetworks = userSocialNetworkRepository.getSocialNetworkByUserId(userId);
+
+        return new ProfileInfoDTO(sectionAndStamp, softwareSkills, resumePath, resumeName,
+                userEducation, diplomaPath, diplomaName, userSocialNetworks,
+                user.getTelegram(), user.getAbout());
     }
 
+    @Transactional
+    public void updateProfile(String authHeader, UploadProfileDTO uploadProfileDTO) {
+        User user = jwtUtils.getUserByAuthHeader(authHeader);
+        long userId = user.getId();
+
+        userRepository.updateAbout(userId, uploadProfileDTO.about());
+
+        userEducationRepository.deleteEducation(userId);
+        uploadProfileDTO.education().forEach(education ->
+                userEducationRepository.addEducation(userId, education));
+
+        userSocialNetworkRepository.deleteByUserId(userId);
+        uploadProfileDTO.contacts().forEach(contact ->
+                userSocialNetworkRepository.addSocialNetwork(userId, contact));
+
+        userSectionAndStampRepository.deleteByUserId(userId);
+        uploadProfileDTO.sectionAndStamps().forEach(section ->
+                userSectionAndStampRepository.addUserSection(userId, section));
+
+        userSoftwareSkillRepository.deleteByUserId(userId);
+        uploadProfileDTO.softwareSkills().forEach(software ->
+                userSoftwareSkillRepository.addSoftwareSkill(userId, software));
+    }
+
+    public ProfileSettingInfoDTO getProfileSettingInfo(String authHeader) {
+        User user = jwtUtils.getUserByAuthHeader(authHeader);
+        String photoPath = user.getPhotoPath();
+        if (photoPath != null && !Objects.equals("", photoPath)) {
+            photoPath = fileService.getPresignedLink(photoPath);
+        }
+        return new ProfileSettingInfoDTO(photoPath, user.getSurname(), user.getName(), user.getGender(),
+                user.getCity(), user.getBirthDate().toString(), user.getEmail(), user.getStatus(), user.getHideBirthday(),
+                user.getIsPublic());
+    }
+
+    public void uploadProfileSetting(ProfileSettingInfoDTO profileSettingInfoDTO, String authHeader) {
+        User user = jwtUtils.getUserByAuthHeader(authHeader);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        sdf.setLenient(false);
+        Date updateDate = null;
+        try {
+            updateDate = sdf.parse(profileSettingInfoDTO.birthday());
+        } catch (Exception ignored) {}
+        userRepository.updateProfileSettingFields(
+            user.getId(), profileSettingInfoDTO.name(), profileSettingInfoDTO.surname(),
+                profileSettingInfoDTO.gender(), profileSettingInfoDTO.city(),
+                updateDate, profileSettingInfoDTO.email(),
+                profileSettingInfoDTO.status(), profileSettingInfoDTO.isHideBirthday(),
+                profileSettingInfoDTO.isPublic()
+        );
+    }
 }

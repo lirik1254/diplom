@@ -1,4 +1,4 @@
-package backend.academy.diplom.entities;
+package backend.academy.diplom.entities.lesson;
 
 import lombok.Data;
 
@@ -8,4 +8,5 @@ public class Lesson {
     private String name;
     private Long moduleId;
     private Long authorId;
+    private Integer number;
 }

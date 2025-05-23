@@ -12,9 +12,11 @@ public class ModuleRowMapper implements RowMapper<Module> {
     @Override
     public Module mapRow(ResultSet rs, int rowNum) throws SQLException {
         Module module = new Module();
+
         module.setId(rs.getLong("id"));
         module.setNumber(rs.getInt("number"));
         module.setName(rs.getString("name"));
+        module.setCourseId(rs.getLong("course_id"));
 
         return module;
     }

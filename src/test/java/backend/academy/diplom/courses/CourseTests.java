@@ -37,9 +37,6 @@ public class CourseTests extends TestBase {
     @Autowired
     private CourseRepository courseRepository;
 
-    @MockitoBean
-    private PasswordUtils passwordUtils;
-
     @Test
     public void getMainPreviewTest() throws Exception {
         String registerContent = """

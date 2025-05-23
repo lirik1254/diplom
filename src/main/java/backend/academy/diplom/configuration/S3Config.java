@@ -1,4 +1,4 @@
-package backend.academy.diplom;
+package backend.academy.diplom.configuration;
 
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;

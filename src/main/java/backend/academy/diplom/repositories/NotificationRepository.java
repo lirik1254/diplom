@@ -1,8 +1,7 @@
 package backend.academy.diplom.repositories;
 
 import backend.academy.diplom.entities.Notification;
-import backend.academy.diplom.entities.User;
-import backend.academy.diplom.repositories.auth.UserRepository;
+import backend.academy.diplom.entities.user.User;
 import backend.academy.diplom.repositories.rowmappers.NotificationRowMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -89,41 +88,41 @@ public class NotificationRepository {
         template.update(sql, sqlParameterSource);
     }
 
-    public List<Notification> findAllByUserId(Long userId) {
-        String sql = """
-                select n.id, n.notification_user_id, n.notification_text, n.project_id, n.date_time, n.is_watched
-                from engineers.notification n
-                         join engineers.notification_user nu on n.id = nu.notification_id
-                where user_id = :userId;
-                """;
+//    public List<Notification> findAllByUserId(Long userId) {
+//        String sql = """
+//                select n.id, n.notification_user_id, n.notification_text, n.project_id, n.date_time, n.is_watched
+//                from engineers.notification n
+//                         join engineers.notification_user nu on n.id = nu.notification_id
+//                where user_id = :userId;
+//                """;
+//
+//        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("userId", userId);
+//
+//        return template.query(sql, sqlParameterSource, notificationRowMapper);
+//    }
 
-        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("userId", userId);
-
-        return template.query(sql, sqlParameterSource, notificationRowMapper);
-    }
-
-    public void watchNotification(Long userId, Long projectId) {
-        String sql = """
-                select id from engineers.notification
-                where project_id = :projectId and notification_user_id = :userId""";
-
-        SqlParameterSource sqlParameterSource = new MapSqlParameterSource()
-                .addValue("userId", userId)
-                .addValue("projectId", projectId);
-
-        Integer id;
-        try {
-            id = template.queryForObject(sql, sqlParameterSource, Integer.class);
-            sql = """
-                delete from engineers.notification_user nu
-                where nu.notification_id = :id;
-                
-                delete from engineers.notification n
-                where n.id = :id;
-                """;
-
-            sqlParameterSource = new MapSqlParameterSource("id", id);
-            template.update(sql, sqlParameterSource);
-        } catch (Exception ignored) {}
-    }
+//    public void watchNotification(Long userId, Long projectId) {
+//        String sql = """
+//                select id from engineers.notification
+//                where project_id = :projectId and notification_user_id = :userId""";
+//
+//        SqlParameterSource sqlParameterSource = new MapSqlParameterSource()
+//                .addValue("userId", userId)
+//                .addValue("projectId", projectId);
+//
+//        Integer id;
+//        try {
+//            id = template.queryForObject(sql, sqlParameterSource, Integer.class);
+//            sql = """
+//                delete from engineers.notification_user nu
+//                where nu.notification_id = :id;
+//
+//                delete from engineers.notification n
+//                where n.id = :id;
+//                """;
+//
+//            sqlParameterSource = new MapSqlParameterSource("id", id);
+//            template.update(sql, sqlParameterSource);
+//        } catch (Exception ignored) {}
+//    }
 }

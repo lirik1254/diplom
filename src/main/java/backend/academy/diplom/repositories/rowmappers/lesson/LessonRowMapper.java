@@ -1,6 +1,6 @@
 package backend.academy.diplom.repositories.rowmappers.lesson;
 
-import backend.academy.diplom.entities.Lesson;
+import backend.academy.diplom.entities.lesson.Lesson;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +16,7 @@ public class LessonRowMapper implements RowMapper<Lesson> {
         lesson.setName(rs.getString("name"));
         lesson.setModuleId(rs.getLong("module_id"));
         lesson.setAuthorId(rs.getLong("author_id"));
+        lesson.setNumber(rs.getInt("number"));
 
         return lesson;
     }

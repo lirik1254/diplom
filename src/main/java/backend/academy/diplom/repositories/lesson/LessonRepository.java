@@ -1,6 +1,6 @@
 package backend.academy.diplom.repositories.lesson;
 
-import backend.academy.diplom.entities.Lesson;
+import backend.academy.diplom.entities.lesson.Lesson;
 import backend.academy.diplom.repositories.rowmappers.lesson.LessonRowMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -26,18 +26,30 @@ public class LessonRepository {
         return template.query(sql, sqlParameterSource, lessonRowMapper);
     }
 
-    public List<Lesson> getIsHereLesson(Long moduleId, Long userId) {
+    public Lesson getLessonByLessonId(Long lessonId) {
         String sql = """
-                select l.id, name, module_id, author_id from engineers.lesson l
-                join engineers.lesson_user lu on l.id = lu.lesson_id
-                where module_id = :moduleId and user_id = :userId and is_here = true
-                """;
+                select * from engineers.lesson
+                where id = :lessonId""";
 
-        SqlParameterSource sqlParameterSource = new MapSqlParameterSource()
-                .addValue("userId", userId)
-                .addValue("moduleId", moduleId);
+        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("lessonId", lessonId);
 
-        return template.query(sql, sqlParameterSource, lessonRowMapper);
+        return template.query(sql, sqlParameterSource, lessonRowMapper).getFirst();
     }
+
+
+
+//    public List<Lesson> getIsHereLesson(Long moduleId, Long userId) {
+//        String sql = """
+//                select l.id, name, module_id, author_id from engineers.lesson l
+//                join engineers.lesson_user lu on l.id = lu.lesson_id
+//                where module_id = :moduleId and user_id = :userId and is_here = true
+//                """;
+//
+//        SqlParameterSource sqlParameterSource = new MapSqlParameterSource()
+//                .addValue("userId", userId)
+//                .addValue("moduleId", moduleId);
+//
+//        return template.query(sql, sqlParameterSource, lessonRowMapper);
+//    }
 
 }

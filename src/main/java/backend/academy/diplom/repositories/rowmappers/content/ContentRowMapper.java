@@ -1,4 +1,4 @@
-package backend.academy.diplom.repositories.rowmappers;
+package backend.academy.diplom.repositories.rowmappers.content;
 
 import backend.academy.diplom.entities.Content;
 import org.springframework.jdbc.core.RowMapper;

@@ -11,13 +11,16 @@ CREATE TABLE engineers.user (
     password TEXT,
     age INTEGER,
     city TEXT,
-    education TEXT,
     diploma_path text,
     status text,
     resume_path text,
     photo_path text,
     birth_date date,
-    gender varchar(50)
+    gender varchar(50),
+    telegram text,
+    about text,
+    hide_birthday boolean,
+    is_public boolean
 );
 
 -- Таблица разделов и марок
@@ -49,22 +52,6 @@ CREATE TABLE engineers.user_software_skill (
     FOREIGN KEY (user_id) REFERENCES engineers.user(id),
     FOREIGN KEY (software_skill_id) REFERENCES engineers.software_skill(id)
 );
-
--- Таблица социальных сетей
-CREATE TABLE engineers.social_network (
-    id BIGSERIAL PRIMARY KEY,
-    name TEXT
-);
-
--- Таблица связи пользователей с соцсетями
-CREATE TABLE engineers.user_social_network (
-    user_id BIGINT,
-    social_network_id BIGINT,
-    PRIMARY KEY (user_id, social_network_id),
-    FOREIGN KEY (user_id) REFERENCES engineers.user(id),
-    FOREIGN KEY (social_network_id) REFERENCES engineers.social_network(id)
-);
-
 -- Таблица проектов
 CREATE TABLE engineers.project (
     id BIGSERIAL PRIMARY KEY,
@@ -105,7 +92,8 @@ CREATE TABLE engineers.course (
     format text,
     who_whom text,
     what_master text,
-    price_full text
+    price_full text,
+    show_date_bought_course text
 );
 
 -- Таблица тегов
@@ -127,7 +115,8 @@ CREATE TABLE engineers.course_tag (
 CREATE TABLE engineers.module (
     id BIGSERIAL PRIMARY KEY,
     number INTEGER,
-    name TEXT
+    name TEXT,
+    course_id bigint references engineers.course(id)
 );
 
 -- Таблица уроков
@@ -156,9 +145,11 @@ CREATE TABLE engineers.content (
 CREATE TABLE engineers.user_course (
     user_id BIGINT,
     course_id BIGINT,
+    last_lesson_id bigint,
     PRIMARY KEY (user_id, course_id),
     FOREIGN KEY (user_id) REFERENCES engineers.user(id),
-    FOREIGN KEY (course_id) REFERENCES engineers.course(id)
+    FOREIGN KEY (course_id) REFERENCES engineers.course(id),
+    foreign key (last_lesson_id) references engineers.lesson(id)
 );
 
 -- Таблица домашних заданий
@@ -220,14 +211,6 @@ create table engineers.password_reset_token (
     foreign key (user_id) references engineers.user(id)
 );
 
-create table engineers.course_module (
-    course_id bigint,
-    module_id bigint,
-    primary key (course_id, module_id),
-    foreign key (course_id) references engineers.course(id),
-    foreign key (module_id) references engineers.module(id)
-);
-
 create table engineers.project_section_and_stamp (
     project_id bigint,
     section_and_stamp_id bigint,
@@ -252,3 +235,56 @@ create table engineers.project_user_like (
     foreign key (user_id) references engineers.user(id)
 );
 
+create table engineers.project_content(
+    id bigserial primary key,
+    content_type text,
+    content text,
+    content_url text,
+    content_order integer,
+    project_id bigint,
+    foreign key(project_id) references engineers.project(id)
+);
+
+CREATE TABLE engineers.user_education (
+    id bigserial primary key,
+    user_id bigint,
+    education text,
+    FOREIGN KEY (user_id) REFERENCES engineers.user(id)
+);
+
+create table engineers.user_social_network(
+    id bigserial primary key,
+    user_id bigint,
+    social_network text,
+    foreign key (user_id) references engineers."user"(id)
+);
+
+create table engineers.lesson_content(
+    id bigserial primary key,
+    lesson_text text,
+    video_url text,
+    lesson_task_text text,
+    lesson_id bigint unique references engineers.lesson(id)
+);
+
+create table engineers.companies(
+    id bigserial primary key,
+    name text,
+    status text,
+    city text,
+    photo_path text
+);
+
+insert into engineers.section_and_stamp(id, name)
+values (1, 'ГП'),
+       (2, 'АС'),
+       (3, 'АР'),
+       (4, 'ВК'),
+       (5, 'ВС');
+
+insert into engineers.software_skill(id, name)
+values (1, 'Allplan'),
+       (2, 'Renga'),
+       (3, 'Revit'),
+       (4, 'Компас 3D'),
+       (5, 'BIM WIZARD');

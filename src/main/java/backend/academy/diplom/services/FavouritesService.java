@@ -2,9 +2,8 @@ package backend.academy.diplom.services;
 
 import backend.academy.diplom.DTO.search.ProjectsDTO;
 import backend.academy.diplom.entities.Project;
-import backend.academy.diplom.entities.User;
+import backend.academy.diplom.entities.user.User;
 import backend.academy.diplom.repositories.FavouritesRepository;
-import backend.academy.diplom.repositories.auth.UserRepository;
 import backend.academy.diplom.utils.JwtUtils;
 import backend.academy.diplom.utils.ProjectUtils;
 import lombok.RequiredArgsConstructor;
@@ -25,13 +24,13 @@ public class FavouritesService {
         favouritesRepository.updateFavourites(user.getId(), projectId);
     }
 
-    public List<ProjectsDTO> getFavourites(String authHeader) {
-        User user = jwtUtils.getUserByAuthHeader(authHeader);
-
-        List<Project> projects = favouritesRepository.getAllByUserId(user.getId());
-
-        return projectUtils.projectsToDTO(projects);
-    }
+//    public List<ProjectsDTO> getFavourites(String authHeader) {
+//        User user = jwtUtils.getUserByAuthHeader(authHeader);
+//
+//        List<Project> projects = favouritesRepository.getAllByUserId(user.getId());
+//
+//        return projectUtils.projectsToDTO(projects);
+//    }
 
     public Boolean checkFavourites(String authHeader, Long projectId) {
         User user = jwtUtils.getUserByAuthHeader(authHeader);

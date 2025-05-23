@@ -15,12 +15,15 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -33,9 +36,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @DirtiesContext
 public class ProjectTests extends TestBase {
-
-    @MockitoBean
-    private PasswordUtils passwordUtils;
 
     public void init() {
         String sql = "INSERT INTO engineers.project " +
@@ -119,6 +119,38 @@ public class ProjectTests extends TestBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(5)))
                 .andExpect(jsonPath("$[0].name").value("Alpha Initiative"));
+    }
+
+    @Test
+    public void getProjectsTestZeroCount() throws Exception {
+        String registerContent = """
+        {
+            "email": "test@mail.ru"
+        }
+    """;
+        when(passwordUtils.generateRandomPassword(anyInt())).thenReturn("testtest");
+        mockMvc.perform(post("/api/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registerContent));
+
+        LoginRequest loginReq = new LoginRequest("test@mail.ru", "testtest");
+        MvcResult loginResult = mockMvc.perform(post("/api/sign-in")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginReq)))
+                .andReturn();
+
+        String loginJson = loginResult.getResponse().getContentAsString();
+        String accessToken = objectMapper
+                .readTree(loginJson)
+                .get("accessToken")
+                .asText();
+
+        init();
+
+        mockMvc.perform(get("/api/projects")
+                        .param("count", "0")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -222,5 +254,41 @@ public class ProjectTests extends TestBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(5)))
                 .andExpect(jsonPath("$[0].name").value("Delta Overhaul"));
+    }
+
+    @Test
+    public void getAuthorProjects() throws Exception {
+        String accessToken = getDefaultRegWithAccess();
+        init();
+
+        mockMvc.perform(get("/api/projects/author-projects")
+                        .param("filter", "popularity")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(5)));
+    }
+
+    @Test
+    public void getProjectContent() throws Exception {
+        String accessToken = getDefaultRegWithAccess();
+        init();
+
+        String sql = """
+        insert into engineers.project_content(id, content_type, content, project_id, content_order)
+        values(1, 'text', 'Контент проекта', 1, 1)
+""";
+
+        jdbcTemplate.update(sql);
+
+        mockMvc.perform(get("/api/content/project-content/1")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].contentType").value("text"))
+                .andExpect(jsonPath("$[0].content").value("Контент проекта"))
+                .andExpect(jsonPath("$[0].contentUrl").isEmpty())
+                .andExpect(jsonPath("$[0].contentOrder").value(1))
+                .andExpect(jsonPath("$[0].projectId").value(1));
     }
 }

@@ -1,6 +1,6 @@
 package backend.academy.diplom.repositories.rowmappers.auth;
 
-import backend.academy.diplom.entities.User;
+import backend.academy.diplom.entities.user.User;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 
@@ -20,11 +20,15 @@ public class UserRowMapper implements RowMapper<User> {
         user.setPassword(rs.getString("password"));
         user.setBirthDate(rs.getDate("birth_date"));
         user.setCity(rs.getString("city"));
-        user.setEducation(rs.getString("education"));
         user.setStatus(rs.getString("status"));
         user.setDiplomaPath(rs.getString("diploma_path"));
         user.setResumePath(rs.getString("resume_path"));
         user.setPhotoPath(rs.getString("photo_path"));
+        user.setAbout(rs.getString("about"));
+        user.setTelegram(rs.getString("telegram"));
+        user.setIsPublic(rs.getBoolean("is_public"));
+        user.setHideBirthday(rs.getBoolean("hide_birthday"));
+        user.setGender(rs.getString("gender"));
         return user;
     }
 }

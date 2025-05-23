@@ -1,0 +1,38 @@
+@startuml
+!define DATABASE database
+skinparam componentStyle uml2
+skinparam nodesep 50
+skinparam ranksep 50
+
+package "Мобильное приложение" {
+    [UI] as ui
+    [Java + Android SDK] as android
+    ui --> android : использует
+}
+
+package "Серверная часть" {
+    [Java + Spring] as spring
+}
+
+package "Рекомендательная система" {
+    [Python + FastApi] as django
+}
+
+DATABASE "PostgreSQL" as postgres {
+}
+
+DATABASE "Yandex Cloud Storage" as yandex {
+}
+
+' Связи между компонентами
+android --> spring : HTTP API
+spring --> postgres : JDBC
+spring --> yandex : S3 API
+spring --> django : REST API
+android -> yandex : S3 API
+
+
+
+
+
+@enduml

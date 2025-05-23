@@ -31,16 +31,16 @@ public class FavouritesRepository {
         }
     }
 
-    public List<Project> getAllByUserId(Long userId) {
-        String sql = """
-                select p.id, name, author_id, like_count, photo_url from engineers.favourites f
-                join engineers.project p on f.project_id = p.id
-                where f.user_id = :userId""";
-
-        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("userId", userId);
-
-        return template.query(sql, sqlParameterSource, projectRowMapper);
-    }
+//    public List<Project> getAllByUserId(Long userId) {
+//        String sql = """
+//                select p.id, name, author_id, like_count, photo_url from engineers.favourites f
+//                join engineers.project p on f.project_id = p.id
+//                where f.user_id = :userId""";
+//
+//        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("userId", userId);
+//
+//        return template.query(sql, sqlParameterSource, projectRowMapper);
+//    }
 
     public Boolean checkFavourites(Long userId, Long projectId) {
         String sql = """

@@ -22,6 +22,7 @@ public class CourseRowMapper implements RowMapper<Course> {
         course.setWhoWhom(rs.getString("who_whom"));
         course.setPriceFull(rs.getString("price_full"));
         course.setWhatMaster(rs.getString("what_master"));
+        course.setShowDateBoughtCourse(rs.getString("show_date_bought_course"));
         return course;
     }
 }

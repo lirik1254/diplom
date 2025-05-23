@@ -1,6 +1,6 @@
 package backend.academy.diplom.repositories.auth;
 
-import backend.academy.diplom.entities.User;
+import backend.academy.diplom.entities.user.User;
 import backend.academy.diplom.repositories.rowmappers.auth.UserRowMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -10,10 +10,10 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.sql.Types;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,9 +26,8 @@ public class UserRepository {
 
     public void createUser(User user) {
         String createSql = """
-                insert into engineers.user (name, surname, phone_number, email, password, city,
-                education, status) values
-                (:name, :surname, :phoneNumber, :email, :password,  :city, :education,
+                insert into engineers.user (name, surname, phone_number, email, password, city, status) values
+                (:name, :surname, :phoneNumber, :email, :password,  :city,
                 :status)""";
 
         SqlParameterSource parameterSource =
@@ -38,7 +37,6 @@ public class UserRepository {
                         .addValue("email", user.getEmail())
                         .addValue("password", user.getPassword())
                         .addValue("city", user.getCity())
-                        .addValue("education", user.getEducation())
                         .addValue("status", user.getStatus());
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -91,37 +89,37 @@ public class UserRepository {
         return template.query(findQuery, parameterSource, userRowMapper);
     }
 
-    public void deleteTokenByUserMail(String email) {
-        String deleteToken = """
-                delete from engineers.refresh_token
-                where user_id = (select id from engineers.user where email
-                = :email)""";
+//    public void deleteTokenByUserMail(String email) {
+//        String deleteToken = """
+//                delete from engineers.refresh_token
+//                where user_id = (select id from engineers.user where email
+//                = :email)""";
+//
+//        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("email", email);
+//        template.update(deleteToken, sqlParameterSource);
+//    }
 
-        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("email", email);
-        template.update(deleteToken, sqlParameterSource);
-    }
-
-    public void updateStringFields(String email, String lastName, String firstName, String city,
-                                   String gender, LocalDate birthDate) {
-        String updateFields = """
-                update engineers.user u set
-                name = case when :firstName is not null then :firstName else u.name end,
-                surname = case when :lastName is not null then :lastName else u.surname end,
-                birth_date = case when :birthDate is not null then :birthDate else u.birth_date end,
-                gender = case when :gender is not null then :gender else u.gender end,
-                city = case when :city is not null then :city else u.city end
-                where u.email = :email""";
-
-        SqlParameterSource sqlParameterSource = new MapSqlParameterSource()
-                .addValue("firstName", firstName, Types.VARCHAR)
-                .addValue("lastName", lastName, Types.VARCHAR)
-                .addValue("city", city, Types.VARCHAR)
-                .addValue("gender", gender, Types.VARCHAR)
-                .addValue("birthDate", birthDate, Types.DATE)
-                .addValue("email", email, Types.VARCHAR);
-
-        template.update(updateFields, sqlParameterSource);
-    }
+//    public void updateStringFields(String email, String lastName, String firstName, String city,
+//                                   String gender, LocalDate birthDate) {
+//        String updateFields = """
+//                update engineers.user u set
+//                name = case when :firstName is not null then :firstName else u.name end,
+//                surname = case when :lastName is not null then :lastName else u.surname end,
+//                birth_date = case when :birthDate is not null then :birthDate else u.birth_date end,
+//                gender = case when :gender is not null then :gender else u.gender end,
+//                city = case when :city is not null then :city else u.city end
+//                where u.email = :email""";
+//
+//        SqlParameterSource sqlParameterSource = new MapSqlParameterSource()
+//                .addValue("firstName", firstName, Types.VARCHAR)
+//                .addValue("lastName", lastName, Types.VARCHAR)
+//                .addValue("city", city, Types.VARCHAR)
+//                .addValue("gender", gender, Types.VARCHAR)
+//                .addValue("birthDate", birthDate, Types.DATE)
+//                .addValue("email", email, Types.VARCHAR);
+//
+//        template.update(updateFields, sqlParameterSource);
+//    }
 
     public void updateFileFields(Long userId, String diplomaPath, String photoPath, String resumePath) {
         String updateFields = """
@@ -175,11 +173,11 @@ public class UserRepository {
 
     public List<User> getAllUsersWhoLikeProject(Long projectId) {
         String sql = """
-                select u.id, name, surname, phone_number, email, password, city,
-                education, diploma_path, status, resume_path, photo_path, birth_date, gender
+                select * from engineers.user where id = ( 
+                select u.id
                 from engineers.project_user_like pul
                 join engineers.user u on pul.user_id = u.id
-                where pul.project_id = :projectId""";
+                where pul.project_id = :projectId)""";
 
         SqlParameterSource sqlParameterSource = new MapSqlParameterSource("projectId", projectId);
 
@@ -187,4 +185,47 @@ public class UserRepository {
     }
 
 
+    public void updateAbout(long id, String about) {
+        String sql = """
+                update engineers.user
+                set about = :about
+                where id = :id""";
+
+        SqlParameterSource sqlParameterSource = new MapSqlParameterSource()
+                .addValue("about", about)
+                .addValue("id", id);
+
+        template.update(sql, sqlParameterSource);
+    }
+
+    public void updateProfileSettingFields(Long userId, String name, String surname, String gender, String city,
+                                           Date birthDate, String email, String status, Boolean hideBirthday,
+                                           Boolean isPublic) {
+        String sql = """
+                update engineers.user
+                set name = :name,
+                surname = :surname,
+                gender = :gender,
+                city = :city,
+                birth_date = :birthDate,
+                email = :email,
+                status = :status,
+                hide_birthday = :hideBirthday,
+                is_public = :isPublic
+                where id = :userId""";
+
+        SqlParameterSource sqlParameterSource = new MapSqlParameterSource()
+                .addValue("name", name)
+                .addValue("surname", surname)
+                .addValue("gender", gender)
+                .addValue("city", city)
+                .addValue("birthDate", birthDate)
+                .addValue("email", email)
+                .addValue("status", status)
+                .addValue("hideBirthday", hideBirthday)
+                .addValue("isPublic", isPublic)
+                        .addValue("userId", userId);
+
+        template.update(sql, sqlParameterSource);
+    }
 }

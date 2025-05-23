@@ -31,8 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @DirtiesContext
 public class FavouritesTests extends TestBase {
-    @MockitoBean
-    private PasswordUtils passwordUtils;
 
     public void init() {
         String sql = "INSERT INTO engineers.project " +
@@ -130,4 +128,56 @@ public class FavouritesTests extends TestBase {
                 .andExpect(content().string("false"));
     }
 
+    @Test
+    public void toggleFavouritesTest() throws Exception {
+        // 1) Регистрация и авторизация (как в вашем putFavouritesTest)
+        String registerContent = """
+                {
+                    "email": "test@mail.ru"
+                }
+                """;
+        when(passwordUtils.generateRandomPassword(anyInt())).thenReturn("testtest");
+        mockMvc.perform(post("/api/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(registerContent))
+                .andExpect(status().isCreated());
+
+        LoginRequest loginReq = new LoginRequest("test@mail.ru", "testtest");
+        String loginJson = mockMvc.perform(post("/api/sign-in")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginReq)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String accessToken = objectMapper.readTree(loginJson).get("accessToken").asText();
+
+        init(); // ваше окружение
+
+        // 2) Первый вызов — добавление
+        mockMvc.perform(post("/api/favourites/3")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isOk());
+        Integer countAfterAdd = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM engineers.favourites WHERE user_id = ? AND project_id = ?",
+                Integer.class, 1, 3);
+        assertThat(countAfterAdd).isEqualTo(1);
+        mockMvc.perform(get("/api/favourites/check/3")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
+
+        // 3) Второй вызов — удаление
+        mockMvc.perform(post("/api/favourites/3")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isOk());
+        Integer countAfterDelete = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM engineers.favourites WHERE user_id = ? AND project_id = ?",
+                Integer.class, 1, 3);
+        assertThat(countAfterDelete).isEqualTo(0);
+        mockMvc.perform(get("/api/favourites/check/3")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(content().string("false"));
+    }
 }

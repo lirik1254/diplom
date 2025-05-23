@@ -1,7 +1,7 @@
 package backend.academy.diplom.controllers;
 
 import backend.academy.diplom.DTO.auth.*;
-import backend.academy.diplom.entities.User;
+import backend.academy.diplom.entities.user.User;
 import backend.academy.diplom.services.auth.RefreshTokenService;
 import backend.academy.diplom.services.auth.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,7 +18,7 @@ public class UserController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public void registerUser(@RequestBody User user) {
+    public void registerUser(@RequestBody User user) throws InterruptedException {
         userService.saveUser(user);
     }
 
@@ -32,13 +32,13 @@ public class UserController {
         return refreshTokenService.refresh(refreshRequest);
     }
 
-    @PostMapping("/logout")
-    public void logout(HttpServletRequest request) {
-        userService.logout(request);
-    }
+//    @PostMapping("/logout")
+//    public void logout(HttpServletRequest request) {
+//        userService.logout(request);
+//    }
 
     @PostMapping("/request-reset")
-    public void requestReset(@RequestBody MailDTO mailDTO) {
+    public void requestReset(@RequestBody MailDTO mailDTO) throws InterruptedException {
         userService.requestReset(mailDTO.email());
     }
 

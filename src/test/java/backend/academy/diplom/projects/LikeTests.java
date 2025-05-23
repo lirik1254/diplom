@@ -223,6 +223,67 @@ public class LikeTests extends TestBase {
     }
 
     @Test
+    public void likeProjectTestZeroLike() throws Exception {
+        String registerContent = """
+        {
+            "email": "test@mail.ru"
+        }
+    """;
+        when(passwordUtils.generateRandomPassword(anyInt())).thenReturn("testtest");
+        mockMvc.perform(post("/api/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registerContent));
+
+        LoginRequest loginReq = new LoginRequest("test@mail.ru", "testtest");
+        mockMvc.perform(post("/api/sign-in")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginReq)));
+
+        String registerContentSecond = """
+        {
+            "email": "test2@mail.ru"
+        }
+    """;
+        when(passwordUtils.generateRandomPassword(anyInt())).thenReturn("testtest");
+        mockMvc.perform(post("/api/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registerContentSecond));
+
+        LoginRequest loginReqSecond = new LoginRequest("test2@mail.ru", "testtest");
+        MvcResult loginResultSecond = mockMvc.perform(post("/api/sign-in")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginReqSecond)))
+                .andReturn();
+
+        String loginJsonSecond = loginResultSecond.getResponse().getContentAsString();
+        String accessTokenSecond = objectMapper
+                .readTree(loginJsonSecond)
+                .get("accessToken")
+                .asText();
+
+        init();
+
+        Project betaLaunchProject = projectRepository.getAllProjects()
+                .stream().filter(s -> s.getName().equals("Epsilon Prototype"))
+                .toList().getFirst();
+
+        assertEquals(0, betaLaunchProject.getLikeCount());
+
+        mockMvc.perform(post("/api/projects/like/5")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessTokenSecond))
+                .andExpect(status().isOk());
+
+        betaLaunchProject = projectRepository.getAllProjects()
+                .stream().filter(s -> s.getName().equals("Epsilon Prototype"))
+                .toList().getFirst();
+        assertEquals(1, betaLaunchProject.getLikeCount());
+
+        String sql = "SELECT COUNT(*) FROM engineers.notification_user WHERE user_id = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, 1);
+        assertThat(count).isGreaterThan(0);
+    }
+
+    @Test
     public void ownLikeTest() throws Exception {
         String registerContent = """
         {

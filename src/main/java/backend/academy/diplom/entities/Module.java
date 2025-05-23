@@ -7,4 +7,5 @@ public class Module {
     private Long id;
     private int number;
     private String name;
+    private Long courseId;
 }
